@@ -5,7 +5,6 @@ class Vacuna:
         self._lote = str(lote).strip()
         self._intervalo_dosis_dias = int(intervalo_dosis_dias)
 
-    # --- GETTERS ---
     def get_id(self):
         return self._id
 
@@ -18,7 +17,6 @@ class Vacuna:
     def get_intervalo_dosis_dias(self):
         return int(self._intervalo_dosis_dias)
 
-    # --- SETTERS ---
     def set_id(self, id_vacuna):
         if id_vacuna is None or str(id_vacuna).strip() == "":
             raise ValueError("El ID de la vacuna no puede estar vacío")
@@ -39,7 +37,6 @@ class Vacuna:
             raise ValueError("El intervalo en días no puede ser un valor negativo")
         self._intervalo_dosis_dias = int(intervalo)
 
-    # --- REPRESENTACIÓN EN TEXTO ---
     def __str__(self):
         return (
             f"ID: {self._id}, nombre: {self._nombre}, "
