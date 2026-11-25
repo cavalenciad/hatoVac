@@ -1,9 +1,16 @@
 from GestionHato import GestionHato
 
+RED = "\033[31m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+BLUE = "\033[34m"
+MAGENTA = "\033[35m"
+CYAN = "\033[36m"
+RESET = "\033[0m"
 
 def mostrar_menu():
     print("\n==========================================")
-    print("   HATOVAC - GESTIÓN DE VACUNACIÓN BOVINA")
+    print(f"{MAGENTA}HATOVAC - GESTIÓN DE VACUNACIÓN BOVINA{RESET}")
     print("==========================================")
     print("1. Registrar nuevo bovino")
     print("2. Registrar nueva vacuna en catálogo")
@@ -16,9 +23,8 @@ def mostrar_menu():
     print("0. Salir")
     print("==========================================")
 
-
 def main():
-    hato = GestionHato("Hacienda El Progreso")
+    hato = GestionHato("HatoVac")
 
     fecha_actual = ""
     fecha_valida = False

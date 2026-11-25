@@ -20,7 +20,7 @@ class Bovino:
             return 31
 
     def _validar_fecha(self, fecha_str):
-        partes = fecha_str.split("-")
+        partes = fecha_str.split("-") #[2026, 11, 23]
         if len(partes) != 3:
             raise ValueError("La fecha debe tener el formato AAAA-MM-DD.")
 
@@ -41,6 +41,7 @@ class Bovino:
         if dia < 1 or dia > max_dias:
             raise ValueError(f"El día {dia} no es válido para el mes {mes} del año {anio}.")
 
+    # --- GETTERS ---
     def get_id(self):
         return self._id
 
@@ -72,7 +73,7 @@ class Bovino:
     def get_historial(self):
         return self._historial_vacunacion
 
-    # --- SETTERS ---
+    # --- SETTERS --- 
     def set_id(self, id_bovino):
         if not id_bovino or str(id_bovino).strip() == "":
             raise ValueError("El ID del bovino no puede estar vacío.")

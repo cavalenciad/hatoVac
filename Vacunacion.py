@@ -95,7 +95,7 @@ class Vacunacion:
         fecha_str = str(fecha_aplicacion).strip()
         self._validar_y_descomponer_fecha(fecha_str)
         self._fecha_aplicacion = fecha_str
-        self._fecha_proxima_dosis = self._calcular_proxima_dosis()
+        self._fecha_proxima_dosis = self._calcular_proxima_dosis() #Por qué aquí y no en el Setter de set_fecha_proxima_dosis
 
     def set_fecha_proxima_dosis(self, fecha_proxima_dosis):
         fecha_str = str(fecha_proxima_dosis).strip()
