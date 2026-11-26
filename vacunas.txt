@@ -1,1 +1,12 @@
 V001;Fiebre Aftosa;A1234;182
+V002;Brucelosis Bovina;B2045;365
+V003;Rabia Silvestre;R3190;365
+V004;Carbón Bacteridiano;C4512;365
+V005;Carbón Sintomático;C5678;180
+V006;Leptospirosis;L6123;180
+V007;Rinotraqueítis Infecciosa Bovina (IBR);I7890;180
+V008;Diarrea Viral Bovina (DVB);D8341;180
+V009;Pasteurelosis Bovina;P9012;180
+V010;Clostridiosis Polivalente;K1122;180
+V011;Estomatitis Vesicular;E3344;365
+V012;Vacuna Prueba;N1313;180
