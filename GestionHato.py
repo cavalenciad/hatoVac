@@ -83,6 +83,54 @@ class GestionHato:
         dia_str = f"0{dia}" if dia < 10 else str(dia)
         return f"{anio}-{mes_str}-{dia_str}"
 
+    def _formatear_consecutivo(self, prefijo, numero):
+        if numero < 10:
+            return f"{prefijo}00{numero}"
+        elif numero < 100:
+            return f"{prefijo}0{numero}"
+        else:
+            return f"{prefijo}{numero}"
+
+    def generar_siguiente_id_bovino(self):
+        mayor = 0
+        for i in range(len(self._bovinos)):
+            b = self._bovinos[i]
+            if b is not None:
+                id_str = b.get_id()
+                if len(id_str) > 1 and id_str[0] == "B" and id_str[1:].isdigit():
+                    num = int(id_str[1:])
+                    if num > mayor:
+                        mayor = num
+        return self._formatear_consecutivo("B", mayor + 1)
+
+    def generar_siguiente_id_vacuna(self):
+        mayor = 0
+        for i in range(len(self._catalogo_vacunas)):
+            v = self._catalogo_vacunas[i]
+            if v is not None:
+                id_str = v.get_id()
+                if len(id_str) > 1 and id_str[0] == "V" and id_str[1:].isdigit():
+                    num = int(id_str[1:])
+                    if num > mayor:
+                        mayor = num
+        return self._formatear_consecutivo("V", mayor + 1)
+
+    def generar_siguiente_id_vacunacion(self):
+        mayor = 0
+        for i in range(len(self._bovinos)):
+            b = self._bovinos[i]
+            if b is not None:
+                hist = b.get_historial()
+                for j in range(len(hist)):
+                    reg = hist[j]
+                    if reg is not None:
+                        id_str = reg.get_id_vacunacion()
+                        if len(id_str) > 3 and id_str[:3] == "REG" and id_str[3:].isdigit():
+                            num = int(id_str[3:])
+                            if num > mayor:
+                                mayor = num
+        return self._formatear_consecutivo("REG", mayor + 1)
+
     def buscar_bovino_lineal(self, id_bovino):
         id_buscado = str(id_bovino).strip()
         for i in range(len(self._bovinos)):
@@ -118,6 +166,18 @@ class GestionHato:
                 if self._catalogo_vacunas[i].get_id() == id_buscado:
                     return self._catalogo_vacunas[i]
         return None
+
+    def buscar_vacunacion_por_id(self, id_vacunacion):
+            id_buscado = str(id_vacunacion).strip()
+            for i in range(len(self._bovinos)):
+                bovino = self._bovinos[i]
+                if bovino is not None:
+                    historial = bovino.get_historial()
+                    for j in range(len(historial)):
+                        reg = historial[j]
+                        if reg is not None and reg.get_id_vacunacion() == id_buscado:
+                            return bovino, reg
+            return None, None
 
     def ordenar_bovinos_por_id(self):
         n = self._contar_bovinos()
@@ -158,14 +218,10 @@ class GestionHato:
 
         return historial
 
-    def registrar_bovino(self, id_bovino, nombre, fecha_nacimiento, sexo):
-        id_limpio = str(id_bovino).strip()
-        if id_limpio == "":
-            raise ValueError("El ID del bovino no puede estar vacío.")
-        if self.buscar_bovino_lineal(id_limpio) is not None:
-            raise ValueError(f"Ya existe un bovino registrado con el código '{id_limpio}'.")
+    def registrar_bovino(self, nombre, fecha_nacimiento, sexo):
+        id_generado = self.generar_siguiente_id_bovino()
 
-        bovino = Bovino(id_limpio, nombre, fecha_nacimiento, sexo)
+        bovino = Bovino(id_generado, nombre, fecha_nacimiento, sexo)
         bovino.set_nombre(nombre)
         bovino.set_fecha_nacimiento(fecha_nacimiento)
         bovino.set_sexo(sexo)
@@ -173,18 +229,14 @@ class GestionHato:
         for i in range(len(self._bovinos)):
             if self._bovinos[i] is None:
                 self._bovinos[i] = bovino
-                return True
+                return bovino
 
         raise ValueError("No hay capacidad disponible en el hato para registrar más bovinos.")
+    
+    def registrar_vacuna(self, nombre, lote, intervalo_dosis_dias):
+        id_generado = self.generar_siguiente_id_vacuna()
 
-    def registrar_vacuna(self, id_vacuna, nombre, lote, intervalo_dosis_dias):
-        id_limpio = str(id_vacuna).strip()
-        if id_limpio == "":
-            raise ValueError("El ID de la vacuna no puede estar vacío.")
-        if self.buscar_vacuna_lineal(id_limpio) is not None:
-            raise ValueError(f"Ya existe una vacuna registrada con el código '{id_limpio}'.")
-
-        vacuna = Vacuna(id_limpio, nombre, lote, intervalo_dosis_dias)
+        vacuna = Vacuna(id_generado, nombre, lote, intervalo_dosis_dias)
         vacuna.set_nombre(nombre)
         vacuna.set_lote(lote)
         vacuna.set_intervalo_dosis_dias(intervalo_dosis_dias)
@@ -192,11 +244,11 @@ class GestionHato:
         for i in range(len(self._catalogo_vacunas)):
             if self._catalogo_vacunas[i] is None:
                 self._catalogo_vacunas[i] = vacuna
-                return True
+                return vacuna
 
         raise ValueError("El catálogo de vacunas alcanzó su capacidad máxima.")
 
-    def registrar_vacunacion_bovino(self, id_vacunacion, id_bovino, id_vacuna, fecha_aplicacion, fecha_actual):
+    def registrar_vacunacion_bovino(self, id_bovino, id_vacuna, fecha_aplicacion, fecha_actual):
         bovino = self.buscar_bovino_binaria(id_bovino)
         if bovino is None:
             raise ValueError(f"No se puede vacunar: el bovino '{id_bovino}' no está registrado.")
@@ -213,20 +265,86 @@ class GestionHato:
         if fecha_app_limpia > fecha_act_limpia:
             raise ValueError("La fecha de aplicación no puede ser futura respecto a la fecha actual.")
 
-        id_reg_limpio = str(id_vacunacion).strip()
-        if id_reg_limpio == "":
-            raise ValueError("El ID del registro de vacunación no puede estar vacío.")
-
-        for i in range(len(self._bovinos)):
-            if self._bovinos[i] is not None:
-                hist = self._bovinos[i].get_historial()
-                for j in range(len(hist)):
-                    if hist[j] is not None and hist[j].get_id_vacunacion() == id_reg_limpio:
-                        raise ValueError(f"El código de vacunación '{id_reg_limpio}' ya existe.")
-
-        vacunacion = Vacunacion(id_reg_limpio, vacuna, fecha_app_limpia)
+        id_generado = self.generar_siguiente_id_vacunacion()
+        vacunacion = Vacunacion(id_generado, vacuna, fecha_app_limpia)
         bovino.agregar_vacunacion(vacunacion)
         return vacunacion
+
+    def editar_bovino(self, id_bovino, nuevo_nombre=None, nueva_fecha_nac=None, nuevo_sexo=None):
+        bovino = self.buscar_bovino_binaria(id_bovino)
+        if bovino is None:
+            raise ValueError(f"No existe ningún bovino registrado con el ID '{id_bovino}'.")
+
+        # Validar coherencia de la nueva fecha de nacimiento con su historial existente
+        if nueva_fecha_nac is not None and str(nueva_fecha_nac).strip() != "":
+            fecha_limpia = str(nueva_fecha_nac).strip()
+            self._validar_fecha(fecha_limpia)
+
+            historial = bovino.get_historial()
+            for i in range(len(historial)):
+                reg = historial[i]
+                if reg is not None and fecha_limpia > reg.get_fecha_aplicacion():
+                    raise ValueError(
+                        f"La fecha de nacimiento ({fecha_limpia}) no puede ser posterior "
+                        f"a una vacunación ya registrada ({reg.get_fecha_aplicacion()})."
+                    )
+            bovino.set_fecha_nacimiento(fecha_limpia)
+
+        if nuevo_nombre is not None and str(nuevo_nombre).strip() != "":
+            bovino.set_nombre(nuevo_nombre)
+
+        if nuevo_sexo is not None and str(nuevo_sexo).strip() != "":
+            bovino.set_sexo(nuevo_sexo)
+
+        return bovino
+
+    def editar_vacuna(self, id_vacuna, nuevo_nombre=None, nuevo_lote=None, nuevo_intervalo=None):
+        vacuna = self.buscar_vacuna_lineal(id_vacuna)
+        if vacuna is None:
+            raise ValueError(f"No existe ninguna vacuna registrada con el ID '{id_vacuna}'.")
+
+        if nuevo_nombre is not None and str(nuevo_nombre).strip() != "":
+            vacuna.set_nombre(nuevo_nombre)
+
+        if nuevo_lote is not None and str(nuevo_lote).strip() != "":
+            vacuna.set_lote(nuevo_lote)
+
+        # Solo afecta futuras vacunaciones; no recalcula las ya registradas
+        if nuevo_intervalo is not None and str(nuevo_intervalo).strip() != "":
+            vacuna.set_intervalo_dosis_dias(int(nuevo_intervalo))
+
+        return vacuna
+
+    def editar_vacunacion(self, id_vacunacion, nuevo_id_vacuna=None, nueva_fecha_aplicacion=None, fecha_actual=None):
+        bovino, reg = self.buscar_vacunacion_por_id(id_vacunacion)
+        if reg is None:
+            raise ValueError(f"No existe ningún registro de vacunación con el ID '{id_vacunacion}'.")
+
+        vacuna_objetivo = reg.get_vacuna()
+        if nuevo_id_vacuna is not None and str(nuevo_id_vacuna).strip() != "":
+            vacuna_encontrada = self.buscar_vacuna_lineal(nuevo_id_vacuna)
+            if vacuna_encontrada is None:
+                raise ValueError(f"La vacuna '{nuevo_id_vacuna}' no existe en el catálogo.")
+            vacuna_objetivo = vacuna_encontrada
+
+        fecha_objetivo = reg.get_fecha_aplicacion()
+        if nueva_fecha_aplicacion is not None and str(nueva_fecha_aplicacion).strip() != "":
+            fecha_limpia = str(nueva_fecha_aplicacion).strip()
+            self._validar_fecha(fecha_limpia)
+
+            if fecha_actual is not None and fecha_limpia > fecha_actual:
+                raise ValueError("La fecha de aplicación no puede ser futura respecto a la fecha actual.")
+            if fecha_limpia < bovino.get_fecha_nacimiento():
+                raise ValueError(
+                    f"La fecha de aplicación ({fecha_limpia}) no puede ser anterior "
+                    f"al nacimiento del bovino ({bovino.get_fecha_nacimiento()})."
+                )
+            fecha_objetivo = fecha_limpia
+
+        # Aplicar cambios y recalcular automáticamente la próxima dosis
+        reg.set_vacuna(vacuna_objetivo)
+        reg.set_fecha_aplicacion(fecha_objetivo)
+        return reg
 
     def generar_matriz_sanitaria(self, fecha_actual):
         self._validar_fecha(fecha_actual)
